@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.4.0-M1</version>
+		<relativePath>../base-project-structure/pom.xml</relativePath>
+	</parent>
+	<groupId>com.synr</groupId>
+	<artifactId>consumer-service</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>ecs-cloudformation-microservice-intercommunication-01</name>
+	<description>Demo project for Spring Boot</description>
+
+	<properties>
+		<java.version>11</java.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<swagger-annotations-version>1.5.17</swagger-annotations-version>
+		<jackson-threetenbp-version>2.6.4</jackson-threetenbp-version>
+		<springfox-version>2.9.2</springfox-version>
+
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+				<!--SpringFox dependencies -->
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+			<version>${springfox-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger-ui</artifactId>
+			<version>${springfox-version}</version>
+		</dependency>
+		<!-- JSON processing: jackson -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.jaxrs</groupId>
+			<artifactId>jackson-jaxrs-json-provider</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.github.joschi.jackson</groupId>
+			<artifactId>jackson-datatype-threetenbp</artifactId>
+			<version>${jackson-threetenbp-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<!-- Usages: -->
+			<!-- mvn compile -P codegen-api-proxy -->
+			<id>codegen-api-proxy</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>io.swagger</groupId>
+						<artifactId>swagger-codegen-maven-plugin</artifactId>
+						<version>2.4.14</version>
+						<executions>
+							<execution>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+								<configuration>
+									<inputSpec>${project.basedir}/src/main/resources/api/producer-service-api.yaml</inputSpec>
+									<language>java</language>
+									<apiPackage>${project.groupId}.producer.proxy.api</apiPackage>
+									<modelPackage>${project.groupId}.producer.proxy.model</modelPackage>
+									<invokerPackage>${project.groupId}.producer.proxy.invoker</invokerPackage>
+									<library>resttemplate</library>
+									<configOptions>
+										<sourceFolder>src/main/java</sourceFolder>
+									</configOptions>
+								</configuration>
+							</execution>
+						</executions>
+
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+	<repositories>
+		<repository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+</project>

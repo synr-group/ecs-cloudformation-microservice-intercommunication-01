@@ -1,0 +1,11 @@
+server:
+  port: 8082
+
+consumer:
+  producerServiceUrl: http://localhost:8081
+  
+springfox:
+  documentation:
+    swagger:
+      v2:
+        path: /api-docs

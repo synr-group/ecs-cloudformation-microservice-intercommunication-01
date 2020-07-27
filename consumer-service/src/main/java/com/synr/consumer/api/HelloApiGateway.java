@@ -11,7 +11,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 @Api(value = "Consumer service Gateway", description = "Consumer service Gateway API")
-@RequestMapping(value = "/api")
+@RequestMapping(value = "/consumer")
 public interface HelloApiGateway {
 
 	@ApiOperation(value = "Get Hello", nickname = "getHelloMessage", notes = "", response = String.class, tags = {

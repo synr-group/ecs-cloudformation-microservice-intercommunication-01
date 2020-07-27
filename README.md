@@ -14,6 +14,8 @@ aws cloudformation validate-template --template-body file://ecs-cluster.cfn.yaml
 
 aws cloudformation validate-template --template-body file://ecs-producer-service-task.cfn.yaml
 
+aws cloudformation validate-template --template-body file://ecs-consumer-service-task.cfn.yaml
+
 ```
 
 ## How to create CloudFormation template

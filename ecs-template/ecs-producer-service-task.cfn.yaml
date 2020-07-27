@@ -16,7 +16,7 @@ Resources:
   Task:
     Type: AWS::ECS::TaskDefinition
     Properties:
-      Family: atlas
+      Family: test-project01
       Cpu: 512
       Memory: 1024 
       NetworkMode: awsvpc
@@ -74,7 +74,7 @@ Resources:
     Type: AWS::ECS::Service
     DependsOn: ListenerRule
     Properties:
-      ServiceName: atlas-service
+      ServiceName: test-project01-service
       TaskDefinition: !Ref Task
       Cluster: 
         Fn::ImportValue: 
@@ -103,7 +103,7 @@ Resources:
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      Name: atlas-tg
+      Name: test-project01-tg
       VpcId: 
         Fn::ImportValue: 
           !Join [':',[!Ref 'NetworkStackName','Vpc']]

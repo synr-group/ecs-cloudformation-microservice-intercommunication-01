@@ -14,7 +14,7 @@ services:
     networks:
       - test-network
     environment:
-      consumer.producerServiceUrl: "http://producer.dockercompose.local:8081"
+      consumer.producerServiceUrl: "${PRODUCER_SERVICE_URL}"
     ports:
       - 8082:8082
 

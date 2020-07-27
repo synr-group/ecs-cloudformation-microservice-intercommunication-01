@@ -16,7 +16,7 @@ Added Docker support
 
 ###Build 
 ```
-docker build -t consumer-server-image .
+docker build -t synrgroup/consumer-service-demo-01 .
 ```
 
 ###RUN

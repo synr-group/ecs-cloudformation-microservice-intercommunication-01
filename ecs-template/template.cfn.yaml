@@ -1,0 +1,325 @@
+AWSTemplateFormatVersion: 2010-09-09
+Conditions:
+  CreateCluster: !Equals 
+    - ''
+    - !Ref ParameterClusterName
+  CreateLoadBalancer: !Equals 
+    - ''
+    - !Ref ParameterLoadBalancerARN
+
+Parameters:
+  ParameterClusterName:
+    Description: Name of the ECS cluster to deploy to (optional)
+    Type: String
+  ParameterLoadBalancerARN:
+    Description: Name of the LoadBalancer to connect to (optional)
+    Type: String
+  ParameterSubnet1Id:
+    Description: 'SubnetId, for Availability Zone 1 in the region in your VPC'
+    Type: 'AWS::EC2::Subnet::Id'
+  ParameterSubnet2Id:
+    Description: 'SubnetId, for Availability Zone 2 in the region in your VPC'
+    Type: 'AWS::EC2::Subnet::Id'
+  ParameterVPCId:
+    Description: ID of the VPC
+    Type: 'AWS::EC2::VPC::Id'
+
+Resources:
+  CloudMap:
+    Properties:
+      Description: Service Map for Docker Compose project dockercompose
+      Name: dockercompose.local
+      Vpc: !Ref ParameterVPCId
+    Type: 'AWS::ServiceDiscovery::PrivateDnsNamespace'
+  Cluster:
+    Condition: CreateCluster
+    Properties:
+      ClusterName: dockercompose
+      Tags:
+        - Key: com.docker.compose.project
+          Value: dockercompose
+    Type: 'AWS::ECS::Cluster'
+  ConsumerService:
+    DependsOn:
+      - ConsumerTCP8082Listener
+    Properties:
+      Cluster: !If 
+        - CreateCluster
+        - !Ref Cluster
+        - !Ref ParameterClusterName
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: consumer
+          ContainerPort: 8082
+          TargetGroupArn: !Ref ConsumerTCP8082TargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref DockercomposeTestnetworkNetwork
+          Subnets:
+            - !Ref ParameterSubnet1Id
+            - !Ref ParameterSubnet2Id
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+        - RegistryArn: !GetAtt 
+            - ConsumerServiceDiscoveryEntry
+            - Arn
+      Tags:
+        - Key: com.docker.compose.project
+          Value: dockercompose
+        - Key: com.docker.compose.service
+          Value: consumer
+      TaskDefinition: !Ref ConsumerTaskDefinition
+    Type: 'AWS::ECS::Service'
+  ConsumerServiceDiscoveryEntry:
+    Properties:
+      Description: '"consumer" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+          - TTL: 60
+            Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: consumer
+      NamespaceId: !Ref CloudMap
+    Type: 'AWS::ServiceDiscovery::Service'
+  ConsumerTCP8082Listener:
+    Properties:
+      DefaultActions:
+        - ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !Ref ConsumerTCP8082TargetGroup
+          Type: forward
+      LoadBalancerArn: !If 
+        - CreateLoadBalancer
+        - !Ref DockercomposeLoadBalancer
+        - !Ref ParameterLoadBalancerARN
+      Port: 8082
+      Protocol: TCP
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+  ConsumerTCP8082TargetGroup:
+    Properties:
+      Name: ConsumerTCP8082TargetGroup
+      Port: 8082
+      Protocol: TCP
+      Tags:
+        - Key: com.docker.compose.project
+          Value: dockercompose
+      TargetType: ip
+      VpcId: !Ref ParameterVPCId
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+  ConsumerTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+        - Environment:
+            - Name: consumer.producerServiceUrl
+              Value: 'http://producer.dockercompose.local:8081'
+            - Name: LOCALDOMAIN
+              Value: !Join 
+                - ''
+                - - !Ref 'AWS::Region'
+                  - .compute.internal
+                  - ' dockercompose.local'
+          Essential: true
+          Image: 'synrgroup/consumer-service-demo-01:latest'
+          LinuxParameters: {}
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: dockercompose
+          Name: consumer
+          PortMappings:
+            - ContainerPort: 8082
+              HostPort: 8082
+              Protocol: tcp
+      Cpu: '256'
+      ExecutionRoleArn: !Ref ConsumerTaskExecutionRole
+      Family: dockercompose-consumer
+      Memory: '512'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+    Type: 'AWS::ECS::TaskDefinition'
+  ConsumerTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+        - 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly'
+    Type: 'AWS::IAM::Role'
+  DockercomposeLoadBalancer:
+    Condition: CreateLoadBalancer
+    Properties:
+      Name: DockercomposeLoadBalancer
+      Scheme: internet-facing
+      Subnets:
+        - !Ref ParameterSubnet1Id
+        - !Ref ParameterSubnet2Id
+      Tags:
+        - Key: com.docker.compose.project
+          Value: dockercompose
+      Type: network
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+  DockercomposeTestnetworkNetwork:
+    Properties:
+      GroupDescription: dockercompose test-network Security Group
+      GroupName: DockercomposeTestnetworkNetwork
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          Description: 'consumer:8082/tcp'
+          FromPort: 8082
+          IpProtocol: TCP
+          ToPort: 8082
+        - CidrIp: 0.0.0.0/0
+          Description: 'producer:8081/tcp'
+          FromPort: 8081
+          IpProtocol: TCP
+          ToPort: 8081
+      Tags:
+        - Key: com.docker.compose.project
+          Value: dockercompose
+        - Key: com.docker.compose.network
+          Value: test-network
+      VpcId: !Ref ParameterVPCId
+    Type: 'AWS::EC2::SecurityGroup'
+  DockercomposeTestnetworkNetworkIngress:
+    Properties:
+      Description: Allow communication within network test-network
+      GroupId: !Ref DockercomposeTestnetworkNetwork
+      IpProtocol: '-1'
+      SourceSecurityGroupId: !Ref DockercomposeTestnetworkNetwork
+    Type: 'AWS::EC2::SecurityGroupIngress'
+  LogGroup:
+    Properties:
+      LogGroupName: /docker-compose/dockercompose
+    Type: 'AWS::Logs::LogGroup'
+  ProducerService:
+    DependsOn:
+      - ProducerTCP8081Listener
+    Properties:
+      Cluster: !If 
+        - CreateCluster
+        - !Ref Cluster
+        - !Ref ParameterClusterName
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: producer
+          ContainerPort: 8081
+          TargetGroupArn: !Ref ProducerTCP8081TargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref DockercomposeTestnetworkNetwork
+          Subnets:
+            - !Ref ParameterSubnet1Id
+            - !Ref ParameterSubnet2Id
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+        - RegistryArn: !GetAtt 
+            - ProducerServiceDiscoveryEntry
+            - Arn
+      Tags:
+        - Key: com.docker.compose.project
+          Value: dockercompose
+        - Key: com.docker.compose.service
+          Value: producer
+      TaskDefinition: !Ref ProducerTaskDefinition
+    Type: 'AWS::ECS::Service'
+  ProducerServiceDiscoveryEntry:
+    Properties:
+      Description: '"producer" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+          - TTL: 60
+            Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: producer
+      NamespaceId: !Ref CloudMap
+    Type: 'AWS::ServiceDiscovery::Service'
+  ProducerTCP8081Listener:
+    Properties:
+      DefaultActions:
+        - ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !Ref ProducerTCP8081TargetGroup
+          Type: forward
+      LoadBalancerArn: !If 
+        - CreateLoadBalancer
+        - !Ref DockercomposeLoadBalancer
+        - !Ref ParameterLoadBalancerARN
+      Port: 8081
+      Protocol: TCP
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+  ProducerTCP8081TargetGroup:
+    Properties:
+      Name: ProducerTCP8081TargetGroup
+      Port: 8081
+      Protocol: TCP
+      Tags:
+        - Key: com.docker.compose.project
+          Value: dockercompose
+      TargetType: ip
+      VpcId: !Ref ParameterVPCId
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+  ProducerTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+        - Environment:
+            - Name: LOCALDOMAIN
+              Value: !Join 
+                - ''
+                - - !Ref 'AWS::Region'
+                  - .compute.internal
+                  - ' dockercompose.local'
+          Essential: true
+          Image: 'synrgroup/producer-service-demo-01:latest'
+          LinuxParameters: {}
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: dockercompose
+          Name: producer
+          PortMappings:
+            - ContainerPort: 8081
+              HostPort: 8081
+              Protocol: tcp
+      Cpu: '256'
+      ExecutionRoleArn: !Ref ProducerTaskExecutionRole
+      Family: dockercompose-producer
+      Memory: '512'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+    Type: 'AWS::ECS::TaskDefinition'
+  ProducerTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+        - 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly'
+    Type: 'AWS::IAM::Role'

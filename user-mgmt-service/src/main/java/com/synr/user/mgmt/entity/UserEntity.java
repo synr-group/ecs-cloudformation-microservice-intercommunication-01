@@ -1,10 +1,16 @@
 package com.synr.user.mgmt.entity;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 import lombok.Getter;
@@ -21,7 +27,10 @@ public class UserEntity {
 	private Long id;
 
 	@Column(nullable = false, unique = true)
-	private String platformId;
+	private String objectID;
+
+	@ManyToMany(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private Set<GroupEntity> groups = new HashSet<>();
 
 	@Column(nullable = false)
 	// [displayName] Required

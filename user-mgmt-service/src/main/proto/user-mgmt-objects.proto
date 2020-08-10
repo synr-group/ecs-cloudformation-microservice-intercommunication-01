@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package com.synr.user.mgmt;
+
+option java_multiple_files = true;
+option java_package = "com.synr.user.mgmt.gen.proto";
+
+
+message UserRequest {
+	  string objectID=1;
+	  string userName=3;
+	  string password=4;
+}
+
+message UserResponse {
+	  string objectID=1;
+	  string name=2;
+	  string userName=3;
+	  string password=4;
+	  bool blockSign=5;
+	  string firstName=6;
+	  string lastName=7;
+	  string jobTitle=8;
+	  string department=9;
+	  string lastUsageLocation=10;
+	  string streetAddress=11;
+	  string state=12;
+	  string country=13;
+	  string physicalDeliveryOfficeName=14;
+	  string city=15;
+	   string postalCode=16;
+	  string officePhone=17;
+	  string mobilePhone=18;
+	  repeated GroupResponse groups=19;
+}
+
+message UsersResponse {
+	  repeated UserResponse users=1;
+}
+
+
+	
+message GroupResponse {
+	  string objectID=1;
+	  string type=2;
+	  string name=3;
+	  string description=4;
+	  repeated RoleResponse roles=5;
+	  repeated ConsentResponse drivers=6;
+}
+
+	
+message RoleResponse {
+	  string objectID=1;
+	  string type=2;
+	  string name=3;
+	  string description=4;
+	  repeated PermissionResponse roles=5;
+}
+
+message PermissionResponse {
+	  string objectID=1;
+	  string type=2;
+	  string name=3;
+	  string description=4;
+}
+
+message ConsentResponse {
+	  string objectID=1;
+	  string type=2;
+	  string name=3;
+	  string description=4;
+}
+

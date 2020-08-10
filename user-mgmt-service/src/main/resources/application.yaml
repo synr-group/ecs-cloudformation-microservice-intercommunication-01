@@ -1,0 +1,33 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: User Mgmt Service
+
+  datasource:
+    url: jdbc:h2:file:~/userDB
+    driverClassName: org.h2.Driver
+    username: sa
+    password: 
+
+  h2: 
+    console: 
+# Enabling H2 Console
+      enabled: true
+ # Custom H2 Console URL
+      path: /h2-console
+      
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    
+springfox:
+  documentation:
+    swagger:
+      v2:
+        path: /api-docs
+        

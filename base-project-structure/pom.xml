@@ -22,6 +22,9 @@
 		<swagger-annotations-version>1.5.17</swagger-annotations-version>
 		<jackson-threetenbp-version>2.6.4</jackson-threetenbp-version>
 		<springfox-version>2.9.2</springfox-version>
+		<grpc-spring-boot-starter.version>3.5.6</grpc-spring-boot-starter.version>
+		<protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
+		<os-maven-plugin.version>1.6.2</os-maven-plugin.version>
 	</properties>
 
 

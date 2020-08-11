@@ -13,9 +13,9 @@ option java_package = "com.synr.user.mgmt.user.gen.proto";
 service User {
 
  rpc getAllUsers(google.protobuf.Empty) returns (UsersResponse);
- rpc getUser(UserRequest) returns (UserResponse);
- rpc deleteUser(UserRequest) returns (google.protobuf.Empty);
-// rpc saveUser(UserRequest) returns (UserResponse);
-// rpc updateUser(UserRequest) returns (UserResponse);
+ rpc getUser(UsersRequestByUserNameAndPassword) returns (UserResponse);
+ rpc deleteUser(UsersRequestByObjectId) returns (google.protobuf.Empty);
+ rpc saveUser(UserType) returns (UserResponse);
+ rpc updateUser(UserType) returns (UserResponse);
    
 }

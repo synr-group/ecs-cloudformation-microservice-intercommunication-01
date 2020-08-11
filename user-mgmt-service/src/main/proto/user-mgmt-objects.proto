@@ -6,69 +6,77 @@ option java_multiple_files = true;
 option java_package = "com.synr.user.mgmt.gen.proto";
 
 
-message UserRequest {
-	  string objectID=1;
-	  string userName=3;
-	  string password=4;
+
+message UserType{
+	  string name=1;
+	  string userName=2;
+	  string password=3;
+	  bool blockSign=4;
+	  string firstName=5;
+	  string lastName=6;
+	  string jobTitle=7;
+	  string department=8;
+	  string lastUsageLocation=9;
+	  string streetAddress=10;
+	  string state=11;
+	  string country=12;
+	  string physicalDeliveryOfficeName=13;
+	  string city=14;
+	   string postalCode=15;
+	  string officePhone=16;
+	  string mobilePhone=17;
+	  repeated GroupObjectIDs groupObjectIDs=18;
 }
+
+message GroupObjectIDs {
+	  string objectID=1;
+}
+
+message GroupType {
+	  string type=1;
+	  string name=2;
+	  string description=3;
+	  repeated RoleType roles=4;
+	  repeated ConsentType drivers=5;
+}
+
+
+message RoleType {
+	  string type=1;
+	  string name=2;
+	  string description=3;
+	  repeated PermissionType roles=4;
+}
+
+message PermissionType {
+	  string type=1;
+	  string name=2;
+	  string description=3;
+}
+
+message ConsentType {
+	  string type=1;
+	  string name=2;
+	  string description=3;
+}
+
 
 message UserResponse {
 	  string objectID=1;
-	  string name=2;
-	  string userName=3;
-	  string password=4;
-	  bool blockSign=5;
-	  string firstName=6;
-	  string lastName=7;
-	  string jobTitle=8;
-	  string department=9;
-	  string lastUsageLocation=10;
-	  string streetAddress=11;
-	  string state=12;
-	  string country=13;
-	  string physicalDeliveryOfficeName=14;
-	  string city=15;
-	   string postalCode=16;
-	  string officePhone=17;
-	  string mobilePhone=18;
-	  repeated GroupResponse groups=19;
+	  UserType user=2;
 }
 
 message UsersResponse {
-	  repeated UserResponse users=1;
+	  repeated UserResponse user=1;
 }
 
-
-	
-message GroupResponse {
+message UsersRequestByObjectId {
 	  string objectID=1;
-	  string type=2;
-	  string name=3;
-	  string description=4;
-	  repeated RoleResponse roles=5;
-	  repeated ConsentResponse drivers=6;
+
 }
 
-	
-message RoleResponse {
-	  string objectID=1;
-	  string type=2;
-	  string name=3;
-	  string description=4;
-	  repeated PermissionResponse roles=5;
-}
+message UsersRequestByUserNameAndPassword{
+	  string userName=1;
+	  string password=2;
 
-message PermissionResponse {
-	  string objectID=1;
-	  string type=2;
-	  string name=3;
-	  string description=4;
 }
-
-message ConsentResponse {
-	  string objectID=1;
-	  string type=2;
-	  string name=3;
-	  string description=4;
-}
-
